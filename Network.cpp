@@ -15,6 +15,10 @@ using json = nlohmann::json;
 
 #define PORT 23333
 
+static void cleanup_winsock() {
+    WSACleanup();
+}
+
 static bool init_winsock(){
   WSADATA wsaData;
   int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -35,9 +39,11 @@ void Network::handle_client(SOCKET client_socket) {
         json j = json::parse(str);
         std::string action = j["action"].get<std::string>();
         std::string name = j["data"]["playerName"].get<std::string>();
+        //不同行为执行不同操作
         if (action == "login") {
             player = playerManager.get_player(name);
             player->client_socket = client_socket;
+            //断线重连自动刷新
             if (player->room!=nullptr) {
                 player->room->refresh_clients();
             }
@@ -73,6 +79,11 @@ void Network::initialize() {
 
     // 创建套接字
     server_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (server_socket == INVALID_SOCKET) {
+        std::cerr << "套接字创建失败: " << WSAGetLastError() << std::endl;
+        cleanup_winsock();
+        return;
+    }
 
     // 配置服务端地址结构
     server_addr.sin_family = AF_INET;
@@ -80,10 +91,21 @@ void Network::initialize() {
     server_addr.sin_port = htons(PORT);        // 端口号
 
     // 绑定套接字到地址
-    bind(server_socket, reinterpret_cast<sockaddr *>(&server_addr), sizeof(server_addr));
+    if (bind(server_socket, reinterpret_cast<struct sockaddr *>(&server_addr), sizeof(server_addr)) == SOCKET_ERROR) {
+        std::cerr << "绑定失败: " << WSAGetLastError() << std::endl;
+        closesocket(server_socket);
+        cleanup_winsock();
+        return;
+    }
 
     // 监听端口
-    listen(server_socket, 100);
+    if (listen(server_socket, 100) == SOCKET_ERROR) {
+        std::cerr << "监听失败: " << WSAGetLastError() << std::endl;
+        closesocket(server_socket);
+        cleanup_winsock();
+        return;
+    }
+
 
     std::cout << "listening on " << PORT << std::endl;
 
@@ -101,4 +123,13 @@ void Network::initialize() {
         std::thread client_thread(Network::handle_client, client_socket);
 		client_thread.detach();
     }
+
+
+    // 关闭服务端套接字
+    closesocket(server_socket);
+
+    // 清理 Winsock
+    cleanup_winsock();
+
+    return;
 }

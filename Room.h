@@ -28,6 +28,7 @@ class Room {
     std::string player2;
     std::string winner;
     int last_move=2;
+    //1表示玩家1,2表示玩家2,0表示对局结束
     std::set<std::string> spectators;
     std::vector<std::vector<int>> board;
 };
@@ -36,9 +37,11 @@ class RoomManager{
     std::unordered_map<int, std::unique_ptr<Room>> rooms;
     public:
     Room* get_room(const int& roomID) {
+        //已经存在则直接返回指针
         if (rooms.contains(roomID)) {
             return rooms[roomID].get();
         }
+        //不存在则创建再返回指针
         rooms[roomID] = std::make_unique<Room>();
         rooms[roomID]->roomID = roomID;
         return rooms[roomID].get();
