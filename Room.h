@@ -10,8 +10,8 @@
 #include <set>
 #include <unordered_map>
 #include <vector>
+#include <string>
 
-#include "string"
 class Room {
     public:
     Room() {
@@ -31,6 +31,7 @@ class Room {
     std::set<std::string> spectators;
     std::vector<std::vector<int>> board;
 };
+
 class RoomManager{
     std::unordered_map<int, std::unique_ptr<Room>> rooms;
     public:

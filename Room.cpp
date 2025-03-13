@@ -9,6 +9,7 @@
 using json = nlohmann::json;
 
 RoomManager roomManager;
+
 void Room::move(const std::string& name,int x,int y) {
     std::cout<<name<<" move"<<std::endl;
     if (board[x][y]||last_move==0) {
@@ -32,6 +33,13 @@ void Room::move(const std::string& name,int x,int y) {
 
 void Room::end_game() {
     winner = last_move==1?player1:player2;
+    if (last_move==1) {
+        playerManager.change_record(player1,0);
+        playerManager.change_record(player2,1);
+    }else if (last_move==2) {
+        playerManager.change_record(player1,1);
+        playerManager.change_record(player2,0);
+    }
     refresh_clients();
     last_move=0;
 }
@@ -110,8 +118,8 @@ void Room::refresh_clients() {
         client_sockets.insert(playerManager.get_player(s)->client_socket);
     }
     json response;
-    response["player1"]=player1;
-    response["player2"]=player2;
+    response["player1"]=player1.empty()?"None":player1+' '+playerManager.get_record(player1);
+    response["player2"]=player2.empty()?"None":player2+' '+playerManager.get_record(player2);
     response["last_move"]=last_move;
     response["board"]=board;
     response["winner"]=winner;

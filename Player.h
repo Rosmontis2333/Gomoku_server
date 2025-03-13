@@ -4,13 +4,17 @@
 
 #ifndef PLAYER_H
 #define PLAYER_H
+
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <unordered_map>
 #include "Room.h"
 #include "string"
 #include "json.hpp"
+
 using json = nlohmann::json;
+
 class Player {
     public:
     std::string name;
@@ -33,9 +37,9 @@ class Player {
         room->join(name);
     }
 };
+
 class PlayerManager {
-    std::unordered_map<std::string, std::unique_ptr<Player>> players;
-    public:
+public:
     Player* get_player(const std::string& name) {
         if (players.contains(name)) {
             return players[name].get();
@@ -43,6 +47,50 @@ class PlayerManager {
         players[name] = std::make_unique<Player>();
         players[name]->name = name;
         return players[name].get();
+    }
+
+    std::string get_record(std::string name) {
+        if (name.empty()) {
+            return "";
+        }
+        read();
+        std::string result;
+        if (!records.contains(name)) {
+            records[name] = {0,0};
+            save();
+        }
+        result = std::to_string(records[name][0])+'-'+std::to_string(records[name][1]);
+        return result;
+    }
+    void change_record(std::string name,int i) {
+        read();
+        if (records.contains(name)) {
+            records[name][i]++;
+        }else {
+            get_record(name);
+            records[name][i]++;
+        }
+        save();
+    }
+private:
+    std::unordered_map<std::string, std::unique_ptr<Player>> players;
+    std::map<std::string,std::vector<int>> records;
+    void read() {
+        std::ifstream inFile("records.json");
+        std::stringstream buffer;
+        buffer << inFile.rdbuf();
+        std::string content = buffer.str();
+        json j = json::parse(content);
+        records.clear();
+        records=j;
+        inFile.close();
+    }
+    void save() {
+        std::ofstream outFile("records.json");
+        json j = records;
+        std::string content = j.dump(4);
+        outFile << content;
+        outFile.close();
     }
 };
 
