@@ -101,6 +101,7 @@ void Room::leave(const std::string &name) {
     spectators.erase(name);
     refresh_clients();
 }
+
 void Room::refresh_clients() {
     std::set<unsigned long long> client_sockets;
     client_sockets.insert(playerManager.get_player(player1)->client_socket);

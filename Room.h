@@ -43,13 +43,6 @@ class RoomManager{
         return rooms[roomID].get();
     }
 
-    void rm_room(const int& roomID) {
-        if (rooms.contains(roomID)) {
-            delete rooms[roomID].get();
-            rooms.erase(roomID);
-            //get_room(roomID);
-        }
-    }
 };
 extern RoomManager roomManager;
 

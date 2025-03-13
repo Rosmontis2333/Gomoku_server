@@ -42,6 +42,9 @@ void Network::handle_client(SOCKET client_socket) {
         if (action == "login") {
             player = playerManager.get_player(name);
             player->client_socket = client_socket;
+            if (player->room!=nullptr) {
+                player->room->refresh_clients();
+            }
             std::cout<<name<<" login"<<std::endl;
         }else if(action == "move"&&player!=nullptr){
             player->move(j);
