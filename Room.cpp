@@ -20,11 +20,11 @@ void Room::move(const std::string& name,int x,int y) {
     //根据上一个行棋者判断当前谁改行棋
     //是该行棋的玩家就修改棋盘
     if (name==player1&&last_move==2) {
-        board[x][y]='2';
+        board[x][y]=2;
         last_move=1;
         std::cout<<name<<' '<<x<<' '<<y<<std::endl;
     }else if (name==player2&&last_move==1) {
-        board[x][y]='1';
+        board[x][y]=1;
         last_move=2;
         std::cout<<name<<' '<<x<<' '<<y<<std::endl;
     }else {
@@ -34,7 +34,7 @@ void Room::move(const std::string& name,int x,int y) {
     //刷新客户端
     refresh_clients();
     //检查当前行棋玩家是否胜利
-    if (checkWin(x,y)) {
+    if (win_check(x,y)) {
         //如果胜利就结束该局游戏
         end_game();
     }
@@ -56,7 +56,7 @@ void Room::end_game() {
     last_move=0;
 }
 
-bool Room::checkWin(int x, int y) const {
+bool Room::win_check(int x, int y) const {
     int player = board[x][y];
     if (player==0) {
         return false;

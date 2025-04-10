@@ -12,6 +12,7 @@
 #include "Room.h"
 #include "string"
 #include "json.hpp"
+#include <mutex>
 
 using json = nlohmann::json;
 
@@ -22,6 +23,7 @@ class Player {
     bool IsInARoom = false;
     int RoomID=0;
     Room *room=nullptr;
+
     void move(json j) const {
         //当前不在一个房间里则不执行操作
         if (room==nullptr||RoomID==0){
@@ -32,7 +34,8 @@ class Player {
         const int y=j["data"]["position"]["y"].get<int>();
         //调用房间对象的行棋方法
         room->move(name,x,y);
-    };
+    }
+
     void join(json j) {
         //如果当前已经在一个房间里则先退出房间
         if (room!=nullptr&&RoomID!=j["data"]["roomID"])room->leave(name);
@@ -72,6 +75,7 @@ public:
         result = std::to_string(records[name][0])+'-'+std::to_string(records[name][1]);
         return result;
     }
+
     void change_record(std::string name,int i) {
         read();
         if (records.contains(name)) {
@@ -82,11 +86,18 @@ public:
         }
         save();
     }
+
 private:
     //私有变量和方法
     std::unordered_map<std::string, std::unique_ptr<Player>> players;
+    //存储玩家名和玩家对象指针的键值对
     std::map<std::string,std::vector<int>> records;
+    //存储玩家名与战绩的键值对
+    std::mutex file_mutex;
+    //进程锁，防止出现多个进程同时操作文件
+
     void read() {
+        std::lock_guard<std::mutex> lock(file_mutex);
         std::ifstream inFile("records.json");
         std::stringstream buffer;
         buffer << inFile.rdbuf();
@@ -96,7 +107,9 @@ private:
         records=j;
         inFile.close();
     }
+
     void save() {
+        std::lock_guard<std::mutex> lock(file_mutex);
         std::ofstream outFile("records.json");
         json j = records;
         std::string content = j.dump(4);

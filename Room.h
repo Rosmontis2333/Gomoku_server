@@ -19,7 +19,7 @@ class Room {
     }
     int roomID=0;
     void move(const std::string& name,int x,int y);
-    bool checkWin(int x,int y) const;
+    bool win_check(int x,int y) const;
     void end_game();
     void refresh_clients();
     void join(const std::string &name);
